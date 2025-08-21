@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
 import CommentsSection from "../components/CommentsSection";
+import AttachmentsSection from "../components/AttachmentsSection";
 import {
   ArrowLeft,
   Edit,
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   UserCheck,
   Settings,
+  Paperclip,
 } from "lucide-react";
 
 const TicketDetail = () => {
@@ -26,6 +28,7 @@ const TicketDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Para forzar refresh de secciones
 
   // Cargar ticket al montar el componente
   useEffect(() => {
@@ -55,6 +58,12 @@ const TicketDetail = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función para refrescar todo el ticket
+  const refreshTicket = () => {
+    loadTicket();
+    setRefreshKey((prev) => prev + 1); // Forzar refresh de secciones
   };
 
   // Función para actualizar estado del ticket
@@ -320,7 +329,7 @@ const TicketDetail = () => {
 
         <div className="flex items-center space-x-2">
           <button
-            onClick={loadTicket}
+            onClick={refreshTicket}
             disabled={updating}
             className="p-2 text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-100 disabled:opacity-50"
           >
@@ -510,18 +519,36 @@ const TicketDetail = () => {
         </div>
       </div>
 
-      {/* Sistema de comentarios */}
-      <div className="p-6 bg-white rounded-lg shadow">
-        <CommentsSection ticketId={ticket._id} ticketStatus={ticket.status} />
+      {/* NUEVA SECCIÓN: Archivos Adjuntos */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="flex items-center text-lg font-medium text-gray-900">
+            <Paperclip className="w-5 h-5 mr-2 text-gray-600" />
+            Archivos Adjuntos
+          </h3>
+        </div>
+        <div className="p-6">
+          <AttachmentsSection
+            key={refreshKey} // Forzar refresh cuando cambie
+            ticketId={ticket._id}
+            ticketStatus={ticket.status}
+          />
+        </div>
       </div>
 
-      {/* Placeholder para archivos adjuntos (Fase 6) */}
-      <div className="p-6 bg-white rounded-lg shadow">
-        <h3 className="mb-4 text-lg font-medium text-gray-900">
-          Archivos Adjuntos
-        </h3>
-        <div className="py-8 text-center text-gray-500">
-          <p>Los archivos adjuntos serán implementados en la Fase 6</p>
+      {/* Sistema de comentarios */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">
+            Conversación y Actividad
+          </h3>
+        </div>
+        <div className="p-6">
+          <CommentsSection
+            key={refreshKey} // Forzar refresh cuando cambie
+            ticketId={ticket._id}
+            ticketStatus={ticket.status}
+          />
         </div>
       </div>
     </div>

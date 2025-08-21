@@ -1,10 +1,25 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { User, Mail, Briefcase, Shield, Edit, Save, X } from "lucide-react";
+import { useNotifications } from "../contexts/NotificationsContext";
+import ChangePassword from "../components/ChangePassword";
+import {
+  User,
+  Mail,
+  Briefcase,
+  Shield,
+  Edit,
+  Save,
+  X,
+  Lock,
+  Settings,
+} from "lucide-react";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { showSuccess, showError } = useNotifications();
   const [isEditing, setIsEditing] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -24,10 +39,50 @@ const Profile = () => {
     });
   };
 
-  const handleSave = () => {
-    // TODO: Implementar actualización de perfil
-    console.log("Guardando perfil:", formData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    // Validaciones básicas
+    if (!formData.name.trim()) {
+      showError("El nombre es obligatorio");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      showError("El email es obligatorio");
+      return;
+    }
+
+    if (!formData.department) {
+      showError("El departamento es obligatorio");
+      return;
+    }
+
+    setIsUpdating(true);
+
+    try {
+      // TODO: Implementar actualización de perfil en el backend
+      // Por ahora simulamos la actualización
+      console.log("Actualizando perfil:", formData);
+
+      // Simular delay de API
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Actualizar usuario en el contexto
+      const updatedUser = {
+        ...user,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        department: formData.department,
+      };
+
+      updateUser(updatedUser);
+      setIsEditing(false);
+      showSuccess("Perfil actualizado exitosamente");
+    } catch (error) {
+      console.error("Error actualizando perfil:", error);
+      showError("Error al actualizar el perfil");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -64,6 +119,17 @@ const Profile = () => {
     );
   };
 
+  const departmentOptions = [
+    "IT",
+    "Contabilidad",
+    "Ventas",
+    "Marketing",
+    "Recursos Humanos",
+    "Administración",
+    "Operaciones",
+    "Otro",
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -87,14 +153,25 @@ const Profile = () => {
             <div className="flex space-x-2">
               <button
                 onClick={handleSave}
-                className="inline-flex items-center px-4 py-2 text-white transition-colors bg-green-600 rounded-md hover:bg-green-700"
+                disabled={isUpdating}
+                className="inline-flex items-center px-4 py-2 text-white transition-colors bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
               >
-                <Save className="w-4 h-4 mr-2" />
-                Guardar
+                {isUpdating ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 border-b-2 border-white rounded-full animate-spin"></div>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar
+                  </>
+                )}
               </button>
               <button
                 onClick={handleCancel}
-                className="inline-flex items-center px-4 py-2 text-gray-700 transition-colors bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                disabled={isUpdating}
+                className="inline-flex items-center px-4 py-2 text-gray-700 transition-colors bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancelar
@@ -139,6 +216,7 @@ const Profile = () => {
                   value={formData.name}
                   onChange={handleChange}
                   className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Tu nombre completo"
                 />
               ) : (
                 <p className="px-3 py-2 text-sm text-gray-900 rounded-md bg-gray-50">
@@ -160,6 +238,7 @@ const Profile = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="tu@empresa.com"
                 />
               ) : (
                 <p className="px-3 py-2 text-sm text-gray-900 rounded-md bg-gray-50">
@@ -181,14 +260,11 @@ const Profile = () => {
                   onChange={handleChange}
                   className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="IT">IT</option>
-                  <option value="Contabilidad">Contabilidad</option>
-                  <option value="Ventas">Ventas</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="RH">Recursos Humanos</option>
-                  <option value="Administración">Administración</option>
-                  <option value="Operaciones">Operaciones</option>
-                  <option value="Otro">Otro</option>
+                  {departmentOptions.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <p className="px-3 py-2 text-sm text-gray-900 rounded-md bg-gray-50">
@@ -229,41 +305,102 @@ const Profile = () => {
         </h3>
 
         <div className="space-y-4">
+          {/* Cambiar Contraseña */}
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
-              <h4 className="font-medium text-gray-900">Cambiar Contraseña</h4>
+              <h4 className="flex items-center font-medium text-gray-900">
+                <Lock className="w-4 h-4 mr-2 text-gray-600" />
+                Cambiar Contraseña
+              </h4>
               <p className="text-sm text-gray-600">
                 Actualiza tu contraseña de acceso al sistema
               </p>
             </div>
-            <button className="px-4 py-2 text-blue-600 transition-colors border border-blue-600 rounded-md hover:bg-blue-50">
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="px-4 py-2 text-blue-600 transition-colors border border-blue-600 rounded-md hover:bg-blue-50"
+            >
               Cambiar
             </button>
           </div>
 
+          {/* Notificaciones por Email */}
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
-              <h4 className="font-medium text-gray-900">
+              <h4 className="flex items-center font-medium text-gray-900">
+                <Settings className="w-4 h-4 mr-2 text-gray-600" />
                 Notificaciones por Email
               </h4>
               <p className="text-sm text-gray-600">
                 Recibir notificaciones sobre updates en mis tickets
               </p>
             </div>
-            <button className="px-4 py-2 text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-50">
+            <button
+              onClick={() =>
+                showSuccess("Funcionalidad disponible en próxima versión")
+              }
+              className="px-4 py-2 text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Configurar
+            </button>
+          </div>
+
+          {/* Preferencias */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <h4 className="flex items-center font-medium text-gray-900">
+                <Settings className="w-4 h-4 mr-2 text-gray-600" />
+                Preferencias del Sistema
+              </h4>
+              <p className="text-sm text-gray-600">
+                Configurar idioma, zona horaria y preferencias de la interfaz
+              </p>
+            </div>
+            <button
+              onClick={() =>
+                showSuccess("Funcionalidad disponible en próxima versión")
+              }
+              className="px-4 py-2 text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-50"
+            >
               Configurar
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="pt-6 mt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
-            <strong>Nota:</strong> Las funciones de cambio de contraseña y
-            notificaciones serán implementadas en la <strong>Fase 7</strong> del
-            desarrollo.
-          </p>
+      {/* Información del sistema */}
+      <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+        <h4 className="mb-2 text-sm font-medium text-blue-900">
+          Información de la Cuenta
+        </h4>
+        <div className="grid grid-cols-1 gap-2 text-sm text-blue-800 md:grid-cols-2">
+          <div>
+            <span className="font-medium">Usuario desde:</span>{" "}
+            {user?.createdAt
+              ? new Date(user.createdAt).toLocaleDateString()
+              : "No disponible"}
+          </div>
+          <div>
+            <span className="font-medium">Último acceso:</span>{" "}
+            {user?.lastLogin
+              ? new Date(user.lastLogin).toLocaleDateString()
+              : "Primer acceso"}
+          </div>
+          <div>
+            <span className="font-medium">ID de usuario:</span>{" "}
+            {user?._id?.slice(-8) || "No disponible"}
+          </div>
+          <div>
+            <span className="font-medium">Estado:</span>{" "}
+            <span className="text-green-700">Activo</span>
+          </div>
         </div>
       </div>
+
+      {/* Modal de cambio de contraseña */}
+      {showChangePassword && (
+        <ChangePassword onCancel={() => setShowChangePassword(false)} />
+      )}
     </div>
   );
 };
