@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
+import CommentsSection from "../components/CommentsSection";
 import {
   ArrowLeft,
   Edit,
@@ -509,14 +510,9 @@ const TicketDetail = () => {
         </div>
       </div>
 
-      {/* Placeholder para comentarios (Fase 5) */}
+      {/* Sistema de comentarios */}
       <div className="p-6 bg-white rounded-lg shadow">
-        <h3 className="mb-4 text-lg font-medium text-gray-900">
-          Comentarios y Actividad
-        </h3>
-        <div className="py-8 text-center text-gray-500">
-          <p>Los comentarios serán implementados en la Fase 5</p>
-        </div>
+        <CommentsSection ticketId={ticket._id} ticketStatus={ticket.status} />
       </div>
 
       {/* Placeholder para archivos adjuntos (Fase 6) */}

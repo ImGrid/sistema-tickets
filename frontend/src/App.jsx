@@ -19,6 +19,8 @@ import MyTickets from "./pages/MyTickets";
 import CreateTicket from "./pages/CreateTicket";
 import AllTickets from "./pages/AllTickets";
 import Profile from "./pages/Profile";
+import TicketDetail from "./pages/TicketDetail";
+import EditTicket from "./pages/EditTicket";
 
 // Páginas de agente
 import MyAssignedTickets from "./pages/MyAssignedTickets";
@@ -113,6 +115,19 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
                     <Audit />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* RUTAS AGREGADAS - Detalle y edición de tickets */}
+              <Route path="tickets/:id" element={<TicketDetail />} />
+              <Route
+                path="tickets/:id/edit"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={["employee", "agent", "supervisor", "admin"]}
+                  >
+                    <EditTicket />
                   </ProtectedRoute>
                 }
               />
