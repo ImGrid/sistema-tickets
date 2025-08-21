@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Configuración base de axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -76,22 +76,143 @@ export const authService = {
   },
 };
 
-// Servicios de tickets (básico para empezar)
+// Servicios de tickets expandidos
 export const ticketsService = {
-  // Obtener lista de tickets
+  // Obtener lista de tickets con filtros avanzados
   getTickets: async (params = {}) => {
-    const response = await api.get("/tickets", { params });
+    // Construir query params
+    const queryParams = new URLSearchParams();
+
+    if (params.status) queryParams.append("status", params.status);
+    if (params.category) queryParams.append("category", params.category);
+    if (params.priority) queryParams.append("priority", params.priority);
+    if (params.search) queryParams.append("search", params.search);
+    if (params.assignedTo) queryParams.append("assignedTo", params.assignedTo);
+    if (params.createdBy) queryParams.append("createdBy", params.createdBy);
+    if (params.page) queryParams.append("page", params.page);
+    if (params.limit) queryParams.append("limit", params.limit);
+    if (params.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+
+    const response = await api.get(`/tickets?${queryParams.toString()}`);
     return response.data;
   },
 
-  // Obtener ticket específico
+  // Obtener ticket específico por ID
   getTicket: async (id) => {
     const response = await api.get(`/tickets/${id}`);
     return response.data;
   },
+
+  // Crear nuevo ticket
+  createTicket: async (ticketData) => {
+    // Validar datos antes de enviar
+    if (!ticketData.title || !ticketData.description || !ticketData.category) {
+      throw new Error("Título, descripción y categoría son obligatorios");
+    }
+
+    const response = await api.post("/tickets", {
+      title: ticketData.title.trim(),
+      description: ticketData.description.trim(),
+      category: ticketData.category,
+      priority: ticketData.priority || "medium",
+      tags: ticketData.tags || [],
+    });
+    return response.data;
+  },
+
+  // Actualizar ticket existente
+  updateTicket: async (id, ticketData) => {
+    const response = await api.put(`/tickets/${id}`, ticketData);
+    return response.data;
+  },
+
+  // Actualizar solo el estado del ticket
+  updateTicketStatus: async (id, status) => {
+    const response = await api.put(`/tickets/${id}`, { status });
+    return response.data;
+  },
+
+  // Asignar ticket a un agente
+  assignTicket: async (id, assignedTo) => {
+    const response = await api.put(`/tickets/${id}/assign`, {
+      assignedTo: assignedTo || null,
+    });
+    return response.data;
+  },
+
+  // Eliminar ticket (solo admin)
+  deleteTicket: async (id) => {
+    const response = await api.delete(`/tickets/${id}`);
+    return response.data;
+  },
+
+  // Obtener estadísticas de tickets
+  getTicketStats: async () => {
+    try {
+      const response = await api.get("/tickets/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error obteniendo stats de tickets:", error);
+      return { stats: {} };
+    }
+  },
+
+  // Búsqueda de tickets
+  searchTickets: async (searchTerm) => {
+    const response = await api.get(`/tickets`, {
+      params: { search: searchTerm },
+    });
+    return response.data;
+  },
+
+  // Obtener tickets por filtros específicos
+  getTicketsByFilter: async (filterType, filterValue) => {
+    const params = {};
+    params[filterType] = filterValue;
+    return await this.getTickets(params);
+  },
+
+  // Validar datos de ticket
+  validateTicketData: (ticketData) => {
+    const errors = {};
+
+    if (!ticketData.title || ticketData.title.trim().length < 3) {
+      errors.title = "El título debe tener al menos 3 caracteres";
+    }
+
+    if (!ticketData.description || ticketData.description.trim().length < 10) {
+      errors.description = "La descripción debe tener al menos 10 caracteres";
+    }
+
+    if (!ticketData.category) {
+      errors.category = "La categoría es obligatoria";
+    }
+
+    const validCategories = [
+      "hardware",
+      "software",
+      "network",
+      "access",
+      "other",
+    ];
+    if (ticketData.category && !validCategories.includes(ticketData.category)) {
+      errors.category = "Categoría no válida";
+    }
+
+    const validPriorities = ["low", "medium", "high", "urgent"];
+    if (ticketData.priority && !validPriorities.includes(ticketData.priority)) {
+      errors.priority = "Prioridad no válida";
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+    };
+  },
 };
 
-// Servicios de dashboard
+// Servicios de dashboard expandidos
 export const dashboardService = {
   // Dashboard automático según rol
   getDashboard: async () => {
@@ -102,6 +223,96 @@ export const dashboardService = {
   // Quick stats
   getQuickStats: async () => {
     const response = await api.get("/dashboard/quick");
+    return response.data;
+  },
+
+  // Dashboard específico de empleado
+  getEmployeeDashboard: async () => {
+    const response = await api.get("/dashboard/employee");
+    return response.data;
+  },
+
+  // Dashboard específico de agente
+  getAgentDashboard: async () => {
+    const response = await api.get("/dashboard/agent");
+    return response.data;
+  },
+
+  // Dashboard específico de admin
+  getAdminDashboard: async () => {
+    const response = await api.get("/dashboard/admin");
+    return response.data;
+  },
+};
+
+// Servicios de comentarios (para fases futuras)
+export const commentsService = {
+  // Obtener comentarios de un ticket
+  getComments: async (ticketId) => {
+    const response = await api.get(`/tickets/${ticketId}/comments`);
+    return response.data;
+  },
+
+  // Crear comentario
+  createComment: async (ticketId, content, isInternal = false) => {
+    const response = await api.post(`/tickets/${ticketId}/comments`, {
+      content,
+      isInternal,
+    });
+    return response.data;
+  },
+
+  // Actualizar comentario
+  updateComment: async (commentId, content) => {
+    const response = await api.put(`/comments/${commentId}`, { content });
+    return response.data;
+  },
+
+  // Eliminar comentario
+  deleteComment: async (commentId) => {
+    const response = await api.delete(`/comments/${commentId}`);
+    return response.data;
+  },
+};
+
+// Servicios de archivos adjuntos (para fases futuras)
+export const attachmentsService = {
+  // Subir archivos
+  uploadFiles: async (ticketId, files) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const response = await api.post(
+      `/tickets/${ticketId}/attachments`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  },
+
+  // Obtener archivos de un ticket
+  getAttachments: async (ticketId) => {
+    const response = await api.get(`/tickets/${ticketId}/attachments`);
+    return response.data;
+  },
+
+  // Descargar archivo
+  downloadFile: async (attachmentId) => {
+    const response = await api.get(`/attachments/${attachmentId}/download`, {
+      responseType: "blob",
+    });
+    return response;
+  },
+
+  // Eliminar archivo
+  deleteFile: async (attachmentId) => {
+    const response = await api.delete(`/attachments/${attachmentId}`);
     return response.data;
   },
 };
