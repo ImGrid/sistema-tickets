@@ -1,9 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Settings, BarChart3, Users, Shield } from "lucide-react";
+import { ticketsService,  } from "../services/api";
 
 const ManageTickets = () => {
   const { user } = useAuth();
+  const [totalTickets, setTotalTickets] = useState("--");
+
+  useEffect(() => {
+    const fetchTotalTickets = async () => {
+      try {
+        // Trae todos los tickets (sin paginación) y cuenta el total
+        const data = await ticketsService.getTickets({ limit: 1 });
+        setTotalTickets(data.total || data.tickets?.length || 0);
+      } catch (error) {
+        setTotalTickets("--");
+      }
+    };
+    fetchTotalTickets();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -22,7 +37,7 @@ const ManageTickets = () => {
             <BarChart3 className="w-8 h-8 text-purple-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">Total Sistema</p>
-              <p className="text-2xl font-semibold text-gray-900">--</p>
+              <p className="text-2xl font-semibold text-gray-900">{totalTickets}</p>
             </div>
           </div>
         </div>
