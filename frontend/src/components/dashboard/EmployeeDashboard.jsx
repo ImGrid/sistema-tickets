@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ticketsService } from "../../services/api";
 import { Plus, Ticket, Clock, CheckCircle, AlertCircle } from "lucide-react";
 
-const EmployeeDashboard = ({ data, loading, error, onRefresh }) => {
+const EmployeeDashboard = ({ data }) => {
   const { user } = useAuth();
   const [recentTickets, setRecentTickets] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
@@ -210,57 +210,6 @@ const EmployeeDashboard = ({ data, loading, error, onRefresh }) => {
           )}
         </div>
       </div>
-
-      {/* Información adicional si hay datos del backend */}
-      {data && (
-        <div className="p-6 bg-white border rounded-lg">
-          <h3 className="mb-4 text-lg font-medium text-gray-900">
-            Estadísticas Detalladas
-          </h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {data.avgResolutionTimeHours && (
-              <div>
-                <p className="text-sm text-gray-500">
-                  Tiempo Promedio Resolución
-                </p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {Math.round(data.avgResolutionTimeHours)} horas
-                </p>
-              </div>
-            )}
-            {data.recentComments && (
-              <div>
-                <p className="text-sm text-gray-500">Comentarios Recientes</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {data.recentComments}
-                </p>
-              </div>
-            )}
-            {data.filesUploaded && (
-              <div>
-                <p className="text-sm text-gray-500">Archivos Subidos</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {data.filesUploaded}
-                </p>
-              </div>
-            )}
-            {data.ticketsByStatus && (
-              <div>
-                <p className="text-sm text-gray-500">Por Estado</p>
-                <div className="mt-1 text-xs text-gray-600">
-                  {Object.entries(data.ticketsByStatus).map(
-                    ([status, count]) => (
-                      <span key={status} className="mr-3">
-                        {status}: {count}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

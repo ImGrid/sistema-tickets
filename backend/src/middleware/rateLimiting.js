@@ -3,7 +3,7 @@ const rateLimit = require("express-rate-limit");
 // Rate limiting general para toda la API
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requests por IP cada 15 minutos
+  max: 10000, // 10000 requests por IP cada 15 minutos
   message: {
     error: "Demasiadas solicitudes, intenta de nuevo en 15 minutos",
   },
@@ -26,7 +26,7 @@ const authLimiter = rateLimit({
 // Rate limiting para upload de archivos
 const uploadLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutos
-  max: 10, // 10 uploads por IP cada 5 minutos
+  max: 1000, // 10 uploads por IP cada 5 minutos
   message: {
     error: "Demasiados uploads, intenta de nuevo en 5 minutos",
   },
@@ -37,7 +37,7 @@ const uploadLimiter = rateLimit({
 // Rate limiting para creación de tickets
 const ticketCreationLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutos
-  max: 20, // 20 tickets por IP cada 10 minutos
+  max: 10000, // 1000 tickets por IP cada 10 minutos
   message: {
     error: "Demasiados tickets creados, intenta de nuevo en 10 minutos",
   },

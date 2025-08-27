@@ -16,6 +16,7 @@ const commentsRoutes = require("./routes/comments");
 const attachmentsRoutes = require("./routes/attachments");
 const auditRoutes = require("./routes/audit");
 const dashboardRoutes = require("./routes/dashboard");
+const usersRoutes = require("./routes/usersRoutes"); // NUEVA RUTA AGREGADA
 
 // Importar middleware de seguridad
 const {
@@ -109,6 +110,7 @@ app.get("/api", (req, res) => {
       sanitization: "enabled",
       auditLogging: "enabled",
       dashboards: "enabled",
+      userManagement: "enabled", // 👈 NUEVA CARACTERÍSTICA
     },
   });
 });
@@ -120,6 +122,7 @@ app.use("/api", commentsRoutes); // Comentarios usan rate limiting general
 app.use("/api", uploadLimiter, attachmentsRoutes); // Rate limiting para uploads
 app.use("/api/audit", auditRoutes); // Rutas de auditoría (solo admin)
 app.use("/api/dashboard", dashboardRoutes); // Dashboards diferenciados por rol
+app.use("/api/users", usersRoutes); // NUEVA RUTA DE GESTIÓN DE USUARIOS (solo admin)
 
 // Middleware para rutas no encontradas
 app.use((req, res) => {
@@ -162,10 +165,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   logger.info(`Servidor iniciado en puerto ${PORT}`);
   logger.info(`Entorno: ${process.env.NODE_ENV}`);
-  logger.info(`API disponible en: http://localhost:${PORT}/api`);
-  logger.info(`Health check en: http://localhost:${PORT}/api/health`);
-  logger.info(`Seguridad avanzada activada`);
-  logger.info(`Dashboards habilitados por rol`);
 });
 
 // Manejo de cierre graceful

@@ -11,7 +11,6 @@ import {
   Save,
   X,
   Lock,
-  Settings,
 } from "lucide-react";
 
 const Profile = () => {
@@ -323,80 +322,8 @@ const Profile = () => {
               Cambiar
             </button>
           </div>
-
-          {/* Notificaciones por Email */}
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <h4 className="flex items-center font-medium text-gray-900">
-                <Settings className="w-4 h-4 mr-2 text-gray-600" />
-                Notificaciones por Email
-              </h4>
-              <p className="text-sm text-gray-600">
-                Recibir notificaciones sobre updates en mis tickets
-              </p>
-            </div>
-            <button
-              onClick={() =>
-                showSuccess("Funcionalidad disponible en próxima versión")
-              }
-              className="px-4 py-2 text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Configurar
-            </button>
-          </div>
-
-          {/* Preferencias */}
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <h4 className="flex items-center font-medium text-gray-900">
-                <Settings className="w-4 h-4 mr-2 text-gray-600" />
-                Preferencias del Sistema
-              </h4>
-              <p className="text-sm text-gray-600">
-                Configurar idioma, zona horaria y preferencias de la interfaz
-              </p>
-            </div>
-            <button
-              onClick={() =>
-                showSuccess("Funcionalidad disponible en próxima versión")
-              }
-              className="px-4 py-2 text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Configurar
-            </button>
-          </div>
         </div>
       </div>
-
-      {/* Información del sistema */}
-      <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-        <h4 className="mb-2 text-sm font-medium text-blue-900">
-          Información de la Cuenta
-        </h4>
-        <div className="grid grid-cols-1 gap-2 text-sm text-blue-800 md:grid-cols-2">
-          <div>
-            <span className="font-medium">Usuario desde:</span>{" "}
-            {user?.createdAt
-              ? new Date(user.createdAt).toLocaleDateString()
-              : "No disponible"}
-          </div>
-          <div>
-            <span className="font-medium">Último acceso:</span>{" "}
-            {user?.lastLogin
-              ? new Date(user.lastLogin).toLocaleDateString()
-              : "Primer acceso"}
-          </div>
-          <div>
-            <span className="font-medium">ID de usuario:</span>{" "}
-            {user?._id?.slice(-8) || "No disponible"}
-          </div>
-          <div>
-            <span className="font-medium">Estado:</span>{" "}
-            <span className="text-green-700">Activo</span>
-          </div>
-        </div>
-      </div>
-
       {/* Modal de cambio de contraseña */}
       {showChangePassword && (
         <ChangePassword onCancel={() => setShowChangePassword(false)} />

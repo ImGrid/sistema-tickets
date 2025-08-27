@@ -316,5 +316,192 @@ export const attachmentsService = {
     return response.data;
   },
 };
+// Servicios de auditoría
+export const auditService = {
+  // Obtener logs de auditoría con filtros
+  getAuditLogs: async (params = {}) => {
+    const queryParams = new URLSearchParams();
 
+    if (params.userId) queryParams.append("userId", params.userId);
+    if (params.action) queryParams.append("action", params.action);
+    if (params.resource) queryParams.append("resource", params.resource);
+    if (params.startDate) queryParams.append("startDate", params.startDate);
+    if (params.endDate) queryParams.append("endDate", params.endDate);
+    if (params.limit) queryParams.append("limit", params.limit);
+    if (params.page) queryParams.append("page", params.page);
+
+    const response = await api.get(`/audit/logs?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  // Obtener estadísticas de seguridad
+  getSecurityStats: async () => {
+    const response = await api.get("/audit/stats");
+    return response.data;
+  },
+
+  // Exportar logs (funcionalidad futura)
+  exportLogs: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+
+    if (params.startDate) queryParams.append("startDate", params.startDate);
+    if (params.endDate) queryParams.append("endDate", params.endDate);
+    if (params.format) queryParams.append("format", params.format);
+
+    const response = await api.get(`/audit/export?${queryParams.toString()}`, {
+      responseType: "blob",
+    });
+    return response;
+  },
+};
+// Servicios de gestión de usuarios
+export const usersService = {
+  // Obtener lista de usuarios con filtros
+  getUsers: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+
+    if (params.role) queryParams.append("role", params.role);
+    if (params.isActive !== undefined)
+      queryParams.append("isActive", params.isActive.toString());
+    if (params.department) queryParams.append("department", params.department);
+    if (params.search) queryParams.append("search", params.search);
+    if (params.page) queryParams.append("page", params.page);
+    if (params.limit) queryParams.append("limit", params.limit);
+    if (params.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+
+    const response = await api.get(`/users?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  // Obtener usuario específico por ID
+  getUserById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  // Actualizar datos básicos del usuario
+  updateUser: async (id, userData) => {
+    // Validar datos antes de enviar
+    if (userData.email && !isValidEmail(userData.email)) {
+      throw new Error("Email inválido");
+    }
+
+    if (userData.name && userData.name.trim().length < 2) {
+      throw new Error("El nombre debe tener al menos 2 caracteres");
+    }
+
+    const response = await api.put(`/users/${id}`, {
+      name: userData.name?.trim(),
+      email: userData.email?.trim().toLowerCase(),
+      department: userData.department?.trim(),
+      employeeId: userData.employeeId?.trim() || null,
+    });
+    return response.data;
+  },
+
+  // Cambiar rol de usuario
+  updateUserRole: async (id, role) => {
+    const validRoles = ["employee", "agent", "supervisor", "admin"];
+    if (!validRoles.includes(role)) {
+      throw new Error(`Rol inválido. Roles válidos: ${validRoles.join(", ")}`);
+    }
+
+    const response = await api.put(`/users/${id}/role`, { role });
+    return response.data;
+  },
+
+  // Activar/desactivar usuario
+  updateUserStatus: async (id, isActive) => {
+    if (typeof isActive !== "boolean") {
+      throw new Error("El estado debe ser true o false");
+    }
+
+    const response = await api.put(`/users/${id}/status`, { isActive });
+    return response.data;
+  },
+
+  // Eliminar usuario
+  deleteUser: async (id, permanent = false) => {
+    const response = await api.delete(`/users/${id}`, {
+      data: { permanent },
+    });
+    return response.data;
+  },
+
+  // Obtener estadísticas de usuarios
+  getUserStats: async () => {
+    const response = await api.get("/users/stats");
+    return response.data;
+  },
+
+  // Búsqueda de usuarios
+  searchUsers: async (searchTerm) => {
+    const response = await api.get("/users", {
+      params: { search: searchTerm, limit: 50 },
+    });
+    return response.data;
+  },
+
+  // Obtener usuarios por rol específico
+  getUsersByRole: async (role) => {
+    const response = await api.get("/users", {
+      params: { role, limit: 100 },
+    });
+    return response.data;
+  },
+
+  // Obtener usuarios activos
+  getActiveUsers: async () => {
+    const response = await api.get("/users", {
+      params: { isActive: true, limit: 100 },
+    });
+    return response.data;
+  },
+
+  // Operaciones masivas para usuarios
+  bulkUpdateRole: async (userIds, role) => {
+    const promises = userIds.map((id) => usersService.updateUserRole(id, role));
+    return await Promise.allSettled(promises);
+  },
+
+  bulkUpdateStatus: async (userIds, isActive) => {
+    const promises = userIds.map((id) =>
+      usersService.updateUserStatus(id, isActive)
+    );
+    return await Promise.allSettled(promises);
+  },
+
+  // Validaciones del lado cliente
+  validateUserData: (userData) => {
+    const errors = {};
+
+    if (!userData.name || userData.name.trim().length < 2) {
+      errors.name = "El nombre debe tener al menos 2 caracteres";
+    }
+
+    if (userData.name && userData.name.length > 50) {
+      errors.name = "El nombre no puede tener más de 50 caracteres";
+    }
+
+    if (!userData.email || !isValidEmail(userData.email)) {
+      errors.email = "Email inválido";
+    }
+
+    if (!userData.department || userData.department.trim().length < 2) {
+      errors.department = "El departamento es obligatorio";
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+    };
+  },
+};
+
+// Función helper para validar email
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
 export default api;
