@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { ticketsService } from "../../services/api";
 import {
   Users,
@@ -13,11 +12,9 @@ import {
   Clock,
 } from "lucide-react";
 
-const AdminDashboard = ({ data, loading, error, onRefresh }) => {
-  const { user } = useAuth();
+const AdminDashboard = ({ data }) => {
   const [criticalTickets, setCriticalTickets] = useState([]);
   const [oldTickets, setOldTickets] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Cargar datos detallados para admin

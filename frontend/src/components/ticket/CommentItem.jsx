@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { commentsService } from "../services/api";
+import { commentsService } from "../../services/api";
 import {
   User,
   UserCheck,

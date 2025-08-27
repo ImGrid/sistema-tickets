@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { commentsService } from "../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import { commentsService } from "../../services/api";
 import CommentItem from "./CommentItem";
 import AddComment from "./AddComment";
 import { MessageSquare, RefreshCw, AlertCircle } from "lucide-react";

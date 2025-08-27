@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { attachmentsService } from "../services/api";
-import FileUpload from "./FileUpload";
+import { useAuth } from "../../contexts/AuthContext";
+import { attachmentsService } from "../../services/api";
+import FileUpload from "../common/FileUpload";
 import AttachmentItem from "./AttachmentItem";
 import { Paperclip, RefreshCw, AlertCircle, Upload } from "lucide-react";
 

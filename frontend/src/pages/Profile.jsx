@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationsContext";
-import ChangePassword from "../components/ChangePassword";
+import ChangePassword from "../components/user/ChangePassword";
 import {
   User,
   Mail,

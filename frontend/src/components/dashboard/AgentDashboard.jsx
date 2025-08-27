@@ -11,7 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-const AgentDashboard = ({ data, loading, error, onRefresh }) => {
+const AgentDashboard = ({ data, onRefresh }) => {
   const { user } = useAuth();
   const [urgentTickets, setUrgentTickets] = useState([]);
   const [availableTickets, setAvailableTickets] = useState([]);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
-import TicketFilters from "../components/TicketFilters";
+import TicketFilters from "../components/ticket/TicketFilters";
 import {
   FileText,
   Clock,

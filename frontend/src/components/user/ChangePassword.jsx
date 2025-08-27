@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNotifications } from "../contexts/NotificationsContext";
-import { authService } from "../services/api";
+import { useNotifications } from "../../contexts/NotificationsContext";
+import { authService } from "../../services/api";
 import { Lock, Eye, EyeOff, Save, X } from "lucide-react";
 
 const ChangePassword = ({ onCancel }) => {

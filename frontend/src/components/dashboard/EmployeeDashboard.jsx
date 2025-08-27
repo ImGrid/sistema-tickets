@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { ticketsService } from "../../services/api";
-import { Plus, Ticket, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Ticket,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Eye,
+} from "lucide-react";
 
 const EmployeeDashboard = ({ data }) => {
-  const { user } = useAuth();
   const [recentTickets, setRecentTickets] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
 
@@ -49,6 +54,37 @@ const EmployeeDashboard = ({ data }) => {
       color: "bg-green-600 hover:bg-green-700",
     },
   ];
+
+  // Función para obtener badge de estado
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      open: { label: "Abierto", color: "bg-blue-100 text-blue-800" },
+      assigned: { label: "Asignado", color: "bg-yellow-100 text-yellow-800" },
+      in_progress: {
+        label: "En Progreso",
+        color: "bg-purple-100 text-purple-800",
+      },
+      pending_user: {
+        label: "Pendiente",
+        color: "bg-orange-100 text-orange-800",
+      },
+      resolved: { label: "Resuelto", color: "bg-green-100 text-green-800" },
+      closed: { label: "Cerrado", color: "bg-gray-100 text-gray-800" },
+    };
+
+    const config = statusConfig[status] || {
+      label: status,
+      color: "bg-gray-100 text-gray-800",
+    };
+
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+      >
+        {config.label}
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -171,39 +207,29 @@ const EmployeeDashboard = ({ data }) => {
               {recentTickets.map((ticket) => (
                 <div
                   key={ticket._id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {ticket.title}
                     </p>
                     <div className="flex items-center mt-1 space-x-2 text-xs text-gray-500">
-                      <span
-                        className={`px-2 py-1 rounded-full ${
-                          ticket.status === "open"
-                            ? "bg-blue-100 text-blue-800"
-                            : ticket.status === "resolved"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {ticket.status}
+                      {getStatusBadge(ticket.status)}
+                      <span className="px-2 py-1 text-gray-800 bg-gray-200 rounded-full">
+                        {ticket.category}
                       </span>
-                      <span>{ticket.category}</span>
                       <span>
                         {new Date(ticket.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      console.log("Ver ticket:", ticket._id);
-                      // TODO: Navegar a detalle del ticket
-                    }}
-                    className="ml-3 text-sm text-blue-600 hover:text-blue-800"
+                  <Link
+                    to={`/tickets/${ticket._id}`}
+                    className="inline-flex items-center ml-3 text-sm text-blue-600 hover:text-blue-800"
                   >
+                    <Eye className="w-4 h-4 mr-1" />
                     Ver
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>

@@ -97,16 +97,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Función de logout
-  const logout = async () => {
+  const logout = () => {
+    // 1. Limpiar el estado local y localStorage INMEDIATAMENTE
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // 2. Intentar el logout en el backend (sin bloquear la UI)
     try {
-      setIsLoading(true);
-      await authService.logout();
+      // La UI ya no depende del resultado de esta llamada (fire-and-forget)
+      authService.logout();
     } catch (error) {
-      console.error("Error en logout:", error);
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      setIsLoading(false);
+      // El error de backend no debería afectar la experiencia de logout del usuario.
+      console.error("Error en el logout del servidor:", error);
     }
   };
 

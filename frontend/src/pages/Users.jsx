@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationsContext";
 import { usersService } from "../services/api";
+import UserDeleteModal from "../components/common/UserDeleteModal";
 import {
   Users as UsersIcon,
   UserPlus,
@@ -52,7 +53,8 @@ const Users = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [confirmAction, setConfirmAction] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
 
@@ -102,7 +104,7 @@ const Users = () => {
     }
   };
 
-  // Función para cargar usuarios
+  // Función para cargar usuarios (FILTRAR ADMIN)
   const loadUsers = async () => {
     try {
       setUsersLoading(true);
@@ -126,8 +128,18 @@ const Users = () => {
       });
 
       const response = await usersService.getUsers(params);
-      setUsers(response.users || []);
-      setTotalUsers(response.pagination?.total || response.users?.length || 0);
+
+      // FILTRAR AL ADMIN ACTUAL DEL RESULTADO
+      const filteredUsers = (response.users || []).filter(
+        (u) => u._id !== user._id
+      );
+      const adjustedTotal = Math.max(
+        0,
+        (response.pagination?.total || response.users?.length || 0) - 1
+      );
+
+      setUsers(filteredUsers);
+      setTotalUsers(adjustedTotal);
     } catch (error) {
       console.error("Error cargando usuarios:", error);
       setError("Error cargando la lista de usuarios");
@@ -152,8 +164,13 @@ const Users = () => {
     setCurrentPage(1);
   };
 
-  // Manejar selección de usuarios
+  // Manejar selección de usuarios (PREVENIR SELECCIÓN DEL ADMIN)
   const handleUserSelect = (userId, isSelected) => {
+    // Doble verificación: no permitir seleccionar al admin actual
+    if (userId === user._id) {
+      return;
+    }
+
     if (isSelected) {
       setSelectedUsers([...selectedUsers, userId]);
     } else {
@@ -161,23 +178,27 @@ const Users = () => {
     }
   };
 
-  // Seleccionar/deseleccionar todos
+  // Seleccionar/deseleccionar todos (EXCLUIR ADMIN)
   const handleSelectAll = (selectAll) => {
     if (selectAll) {
-      setSelectedUsers(users.map((u) => u._id));
+      // Solo seleccionar usuarios que no sean el admin actual
+      const selectableUsers = users
+        .filter((u) => u._id !== user._id)
+        .map((u) => u._id);
+      setSelectedUsers(selectableUsers);
     } else {
       setSelectedUsers([]);
     }
   };
 
   // Abrir modal de edición
-  const openEditModal = (user) => {
-    setEditingUser(user);
+  const openEditModal = (targetUser) => {
+    setEditingUser(targetUser);
     setUserFormData({
-      name: user.name,
-      email: user.email,
-      department: user.department,
-      employeeId: user.employeeId || "",
+      name: targetUser.name,
+      email: targetUser.email,
+      department: targetUser.department,
+      employeeId: targetUser.employeeId || "",
     });
     setFormErrors({});
     setShowUserModal(true);
@@ -248,31 +269,48 @@ const Users = () => {
 
   // Eliminar usuario con confirmación
   const handleQuickDelete = (targetUser) => {
-    setConfirmAction({
-      type: "delete",
-      user: targetUser,
-      message: `¿Estás seguro de que quieres desactivar a ${targetUser.name}?`,
-    });
+    setUserToDelete(targetUser);
+    setShowDeleteModal(true);
     setOpenDropdown(null);
   };
 
   // Confirmar eliminación
-  const confirmDelete = async () => {
+  const confirmDelete = async (isPermanent = false) => {
+    if (!userToDelete) return;
+
     try {
-      await usersService.deleteUser(confirmAction.user._id, false); // Soft delete
-      showSuccess(`Usuario ${confirmAction.user.name} desactivado`);
-      setConfirmAction(null);
+      setUpdating(true);
+      await usersService.deleteUser(userToDelete._id, isPermanent);
+
+      showSuccess(
+        `Usuario ${userToDelete.name} ${
+          isPermanent ? "eliminado permanentemente" : "desactivado"
+        }`
+      );
+
+      setShowDeleteModal(false);
+      setUserToDelete(null);
       loadUsers();
     } catch (error) {
       console.error("Error eliminando usuario:", error);
-      showError(error.response?.data?.error || "Error al eliminar el usuario");
+      showError(
+        error.response?.data?.error ||
+          `Error al ${isPermanent ? "eliminar" : "desactivar"} el usuario`
+      );
+    } finally {
+      setUpdating(false);
     }
   };
 
-  // Operaciones masivas
+  // Operaciones masivas (FILTRAR ADMIN)
   const handleBulkOperation = async (operation, value) => {
-    if (selectedUsers.length === 0) {
-      showError("Selecciona al menos un usuario");
+    // Filtrar el admin de los usuarios seleccionados
+    const filteredSelectedUsers = selectedUsers.filter(
+      (userId) => userId !== user._id
+    );
+
+    if (filteredSelectedUsers.length === 0) {
+      showError("Selecciona al menos un usuario válido");
       return;
     }
 
@@ -281,10 +319,13 @@ const Users = () => {
       let results;
 
       if (operation === "role") {
-        results = await usersService.bulkUpdateRole(selectedUsers, value);
+        results = await usersService.bulkUpdateRole(
+          filteredSelectedUsers,
+          value
+        );
       } else if (operation === "status") {
         results = await usersService.bulkUpdateStatus(
-          selectedUsers,
+          filteredSelectedUsers,
           value === "true"
         );
       }
@@ -625,165 +666,160 @@ const Users = () => {
 
         {!usersLoading && users.length > 0 && (
           <div className="divide-y divide-gray-200">
-            {users
-              .filter((targetUser) => targetUser._id !== user._id)
-              .map((targetUser) => (
-                <div key={targetUser._id} className="p-6 hover:bg-gray-50">
-                  <div className="flex items-center space-x-4">
-                    {/* Checkbox de selección */}
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(targetUser._id)}
-                      onChange={(e) =>
-                        handleUserSelect(targetUser._id, e.target.checked)
-                      }
-                      className="rounded"
-                    />
+            {users.map((targetUser) => (
+              <div key={targetUser._id} className="p-6 hover:bg-gray-50">
+                <div className="flex items-center space-x-4">
+                  {/* Checkbox de selección */}
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(targetUser._id)}
+                    onChange={(e) =>
+                      handleUserSelect(targetUser._id, e.target.checked)
+                    }
+                    className="rounded"
+                  />
 
-                    {/* Avatar */}
-                    <div className="flex-shrink-0">
-                      <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
-                        <UsersIcon className="w-6 h-6 text-gray-600" />
-                      </div>
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
+                      <UsersIcon className="w-6 h-6 text-gray-600" />
                     </div>
+                  </div>
 
-                    {/* Información del usuario */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center mb-1 space-x-3">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
-                          {targetUser.name}
-                        </h3>
-                        {getRoleBadge(targetUser.role)}
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            targetUser.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {targetUser.isActive ? "Activo" : "Inactivo"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>{targetUser.email}</span>
-                        <span>{targetUser.department}</span>
-                        {targetUser.employeeId && (
-                          <span>ID: {targetUser.employeeId}</span>
-                        )}
-                        <span>
-                          Registrado:{" "}
-                          {new Date(targetUser.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Acciones */}
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => openEditModal(targetUser)}
-                        className="p-2 text-blue-600 rounded-md hover:bg-blue-50"
-                        title="Editar usuario"
+                  {/* Información del usuario */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center mb-1 space-x-3">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {targetUser.name}
+                      </h3>
+                      {getRoleBadge(targetUser.role)}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          targetUser.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
                       >
-                        <Edit className="w-4 h-4" />
+                        {targetUser.isActive ? "Activo" : "Inactivo"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <span>{targetUser.email}</span>
+                      <span>{targetUser.department}</span>
+                      {targetUser.employeeId && (
+                        <span>ID: {targetUser.employeeId}</span>
+                      )}
+                      <span>
+                        Registrado:{" "}
+                        {new Date(targetUser.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openEditModal(targetUser)}
+                      className="p-2 text-blue-600 rounded-md hover:bg-blue-50"
+                      title="Editar usuario"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+
+                    {/* Menú de más acciones */}
+                    <div className="relative dropdown-container">
+                      <button
+                        onClick={() =>
+                          setOpenDropdown(
+                            openDropdown === targetUser._id
+                              ? null
+                              : targetUser._id
+                          )
+                        }
+                        className="p-2 text-gray-600 rounded-md hover:bg-gray-50"
+                        title="Más acciones"
+                      >
+                        <MoreVertical className="w-4 h-4" />
                       </button>
 
-                      {/* Menú de más acciones */}
-                      <div className="relative dropdown-container">
-                        <button
-                          onClick={() =>
-                            setOpenDropdown(
-                              openDropdown === targetUser._id
-                                ? null
-                                : targetUser._id
-                            )
-                          }
-                          className="p-2 text-gray-600 rounded-md hover:bg-gray-50"
-                          title="Más acciones"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-
-                        {openDropdown === targetUser._id && (
-                          <div className="absolute right-0 z-10 w-48 mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
-                            <div className="py-1">
-                              {/* Cambiar rol */}
-                              <div className="px-4 py-2 text-xs font-medium text-gray-500">
-                                Cambiar rol a:
-                              </div>
-                              {targetUser.role !== "employee" && (
-                                <button
-                                  onClick={() =>
-                                    handleQuickRoleChange(
-                                      targetUser,
-                                      "employee"
-                                    )
-                                  }
-                                  className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
-                                >
-                                  Empleado
-                                </button>
-                              )}
-                              {targetUser.role !== "agent" && (
-                                <button
-                                  onClick={() =>
-                                    handleQuickRoleChange(targetUser, "agent")
-                                  }
-                                  className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
-                                >
-                                  Agente
-                                </button>
-                              )}
-                              {targetUser.role !== "supervisor" && (
-                                <button
-                                  onClick={() =>
-                                    handleQuickRoleChange(
-                                      targetUser,
-                                      "supervisor"
-                                    )
-                                  }
-                                  className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
-                                >
-                                  Supervisor
-                                </button>
-                              )}
-
-                              <div className="border-t border-gray-100"></div>
-
-                              {/* Cambiar estado */}
+                      {openDropdown === targetUser._id && (
+                        <div className="absolute right-0 z-10 w-48 mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+                          <div className="py-1">
+                            {/* Cambiar rol */}
+                            <div className="px-4 py-2 text-xs font-medium text-gray-500">
+                              Cambiar rol a:
+                            </div>
+                            {targetUser.role !== "employee" && (
                               <button
                                 onClick={() =>
-                                  handleQuickStatusChange(
+                                  handleQuickRoleChange(targetUser, "employee")
+                                }
+                                className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
+                              >
+                                Empleado
+                              </button>
+                            )}
+                            {targetUser.role !== "agent" && (
+                              <button
+                                onClick={() =>
+                                  handleQuickRoleChange(targetUser, "agent")
+                                }
+                                className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
+                              >
+                                Agente
+                              </button>
+                            )}
+                            {targetUser.role !== "supervisor" && (
+                              <button
+                                onClick={() =>
+                                  handleQuickRoleChange(
                                     targetUser,
-                                    !targetUser.isActive
+                                    "supervisor"
                                   )
                                 }
                                 className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
                               >
-                                {targetUser.isActive ? (
-                                  <>Desactivar usuario</>
-                                ) : (
-                                  <>Activar usuario</>
-                                )}
+                                Supervisor
                               </button>
+                            )}
 
-                              <div className="border-t border-gray-100"></div>
+                            <div className="border-t border-gray-100"></div>
 
-                              {/* Eliminar usuario */}
-                              <button
-                                onClick={() => handleQuickDelete(targetUser)}
-                                className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
-                              >
-                                Eliminar usuario
-                              </button>
-                            </div>
+                            {/* Cambiar estado */}
+                            <button
+                              onClick={() =>
+                                handleQuickStatusChange(
+                                  targetUser,
+                                  !targetUser.isActive
+                                )
+                              }
+                              className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
+                            >
+                              {targetUser.isActive ? (
+                                <>Desactivar usuario</>
+                              ) : (
+                                <>Activar usuario</>
+                              )}
+                            </button>
+
+                            <div className="border-t border-gray-100"></div>
+
+                            {/* Eliminar usuario */}
+                            <button
+                              onClick={() => handleQuickDelete(targetUser)}
+                              className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
+                            >
+                              Eliminar usuario
+                            </button>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         )}
 
@@ -965,6 +1001,18 @@ const Users = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de eliminación de usuario */}
+      <UserDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        user={userToDelete}
+        isLoading={updating}
+      />
     </div>
   );
 };

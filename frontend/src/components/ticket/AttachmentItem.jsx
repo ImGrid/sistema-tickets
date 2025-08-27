@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { attachmentsService } from "../services/api";
+import { attachmentsService } from "../../services/api";
 import {
   Download,
   Trash2,

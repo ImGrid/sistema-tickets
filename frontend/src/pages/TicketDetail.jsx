@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
-import CommentsSection from "../components/CommentsSection";
-import AttachmentsSection from "../components/AttachmentsSection";
+import CommentsSection from "../components/ticket/CommentsSection";
+import AttachmentsSection from "../components/ticket/AttachmentsSection";
 import {
   ArrowLeft,
   Edit,

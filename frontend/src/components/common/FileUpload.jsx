@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { attachmentsService } from "../services/api";
+import { attachmentsService } from "../../services/api";
 import {
   Upload,
   X,
