@@ -87,11 +87,6 @@ const MyAssignedTickets = () => {
     try {
       setUpdating(ticketId);
 
-      const response = await ticketsService.updateTicketStatus(
-        ticketId,
-        newStatus
-      );
-
       // Actualizar el ticket en la lista local
       setTickets((prevTickets) =>
         prevTickets.map((ticket) =>

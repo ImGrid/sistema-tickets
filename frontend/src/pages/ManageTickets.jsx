@@ -44,7 +44,6 @@ const ManageTickets = () => {
   });
 
   // Estado para operaciones masivas
-  const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkOperation, setBulkOperation] = useState({
     type: "",
     value: "",

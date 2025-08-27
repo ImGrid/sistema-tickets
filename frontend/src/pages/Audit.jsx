@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationsContext";
 import { auditService } from "../services/api";
 import {
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 
 const Audit = () => {
-  const { user } = useAuth();
   const { showSuccess, showError } = useNotifications();
 
   // Estados principales
