@@ -4,7 +4,7 @@ Sistema web para la administración, seguimiento y resolución de incidencias o 
 
 ### Video de demostración del sistema
 
-Puedes ver una demostración en video del sistema en el siguiente enlace: [Video de demostración]([https://drive.google.com/file/d/1s40N6tDFzAuuoJNkAvwHJbCQgZldWX0w/view?usp=sharing](https://drive.google.com/file/d/1s40N6tDFzAuuoJNkAvwHJbCQgZldWX0w/view?usp=sharing))
+Puedes ver una demostración en video del sistema en el siguiente enlace: [Video de demostración](https://drive.google.com/file/d/1s40N6tDFzAuuoJNkAvwHJbCQgZldWX0w/view?usp=sharing)
 
 ## Características principales
 
