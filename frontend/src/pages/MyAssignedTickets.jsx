@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
 import TicketFilters from "../components/ticket/TicketFilters";
@@ -75,6 +76,7 @@ const MyAssignedTickets = () => {
       console.error("Error cargando mis tickets asignados:", error);
       setError("Error cargando los tickets asignados");
       setTickets([]);
+      toast.error("Error cargando los tickets asignados");
     } finally {
       setLoading(false);
     }
@@ -96,10 +98,20 @@ const MyAssignedTickets = () => {
         )
       );
 
-      console.log(`Ticket ${ticketId} actualizado a estado: ${newStatus}`);
+      // Mostrar toast de éxito
+      const statusLabels = {
+        in_progress: "En Progreso",
+        resolved: "Resuelto",
+        closed: "Cerrado",
+      };
+
+      toast.success(
+        `Ticket actualizado a estado: ${statusLabels[newStatus] || newStatus}`
+      );
     } catch (error) {
       console.error("Error actualizando estado:", error);
       setError("Error al actualizar el estado del ticket");
+      toast.error("Error al actualizar el estado del ticket");
     } finally {
       setUpdating(null);
     }

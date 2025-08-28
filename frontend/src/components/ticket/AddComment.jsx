@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { commentsService } from "../../services/api";
 import { MessageSquare, Send, Shield } from "lucide-react";
 
@@ -19,6 +20,13 @@ const AddComment = ({ ticketId, userRole, onCommentAdded }) => {
 
     if (!content.trim()) {
       setError("El comentario no puede estar vacío");
+      toast.error("El comentario no puede estar vacío");
+      return;
+    }
+
+    if (content.trim().length > 1500) {
+      setError("El comentario es demasiado largo (máximo 1500 caracteres)");
+      toast.error("El comentario es demasiado largo");
       return;
     }
 
@@ -34,17 +42,24 @@ const AddComment = ({ ticketId, userRole, onCommentAdded }) => {
 
       onCommentAdded(response.comment);
 
+      // Mostrar mensaje de éxito específico
+      const successMessage =
+        isInternal && canCreateInternalComments()
+          ? "Comentario interno agregado exitosamente"
+          : "Comentario agregado exitosamente";
+
+      toast.success(successMessage);
+
       // Limpiar formulario
       setContent("");
       setIsInternal(false);
     } catch (error) {
       console.error("Error creando comentario:", error);
 
-      if (error.response?.data?.error) {
-        setError(error.response.data.error);
-      } else {
-        setError("Error al crear el comentario");
-      }
+      const errorMessage =
+        error.response?.data?.error || "Error al crear el comentario";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -54,6 +69,14 @@ const AddComment = ({ ticketId, userRole, onCommentAdded }) => {
   const handleContentChange = (e) => {
     setContent(e.target.value);
     if (error) setError("");
+  };
+
+  // Manejar cambio en checkbox interno
+  const handleInternalChange = (e) => {
+    setIsInternal(e.target.checked);
+    if (e.target.checked && canCreateInternalComments()) {
+      toast.info("Comentario marcado como interno - Solo visible para agentes");
+    }
   };
 
   return (
@@ -79,11 +102,9 @@ const AddComment = ({ ticketId, userRole, onCommentAdded }) => {
 
           {/* Contador de caracteres */}
           <div className="flex justify-between mt-1 text-xs text-gray-500">
-            <span>Caracteres: {content.length}</span>
+            <span>Caracteres: {content.length}/1500</span>
             {content.length > 1500 && (
-              <span className="text-red-500">
-                Máximo recomendado: 1500 caracteres
-              </span>
+              <span className="text-red-500">Excede el límite máximo</span>
             )}
           </div>
         </div>
@@ -100,7 +121,7 @@ const AddComment = ({ ticketId, userRole, onCommentAdded }) => {
                 <input
                   type="checkbox"
                   checked={isInternal}
-                  onChange={(e) => setIsInternal(e.target.checked)}
+                  onChange={handleInternalChange}
                   disabled={loading}
                   className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                 />
@@ -122,7 +143,7 @@ const AddComment = ({ ticketId, userRole, onCommentAdded }) => {
           {/* Botón de envío */}
           <button
             type="submit"
-            disabled={loading || !content.trim()}
+            disabled={loading || !content.trim() || content.length > 1500}
             className="inline-flex items-center px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (

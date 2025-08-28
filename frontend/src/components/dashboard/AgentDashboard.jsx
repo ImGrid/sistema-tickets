@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { ticketsService } from "../../services/api";
 import {
@@ -70,7 +71,7 @@ const AgentDashboard = ({ data, onRefresh }) => {
       onRefresh();
     } catch (error) {
       console.error("Error asignando ticket:", error);
-      alert("Error al tomar el ticket");
+      toast.error("Error al tomar el ticket");
     }
   };
 

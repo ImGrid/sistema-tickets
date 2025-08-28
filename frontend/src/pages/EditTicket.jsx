@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
-import toast from "react-hot-toast";
 import { ArrowLeft, Save, X, AlertCircle } from "lucide-react";
 
 const EditTicket = () => {
@@ -80,6 +80,8 @@ const EditTicket = () => {
       } else {
         setSubmitError("Error cargando el ticket");
       }
+
+      toast.error("Error cargando el ticket");
     } finally {
       setLoading(false);
     }
@@ -186,17 +188,17 @@ const EditTicket = () => {
         updateData
       );
 
-      console.log("Ticket actualizado exitosamente:", response);
+      // Mostrar mensaje de éxito con toast
+      toast.success("Ticket actualizado exitosamente");
 
       // Navegar de vuelta al detalle del ticket
-      navigate(`/tickets/${ticket._id}`, {
-        state: { message: "Ticket actualizado exitosamente" },
-      });
+      navigate(`/tickets/${ticket._id}`);
     } catch (error) {
       console.error("Error actualizando ticket:", error);
 
       if (error.response?.data?.error) {
         setSubmitError(error.response.data.error);
+        toast.error(error.response.data.error);
       } else if (error.response?.data?.details) {
         // Errores de validación del backend
         const backendErrors = {};
@@ -205,8 +207,10 @@ const EditTicket = () => {
         });
         setErrors(backendErrors);
         setSubmitError("Por favor corrige los errores marcados");
+        toast.error("Por favor corrige los errores marcados");
       } else {
         setSubmitError("Error al actualizar el ticket. Intenta de nuevo.");
+        toast.error("Error al actualizar el ticket. Intenta de nuevo.");
       }
     } finally {
       setSaving(false);

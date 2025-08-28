@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
 import TicketFilters from "../components/ticket/TicketFilters";
@@ -74,6 +75,7 @@ const MyTickets = () => {
       console.error("Error cargando tickets:", error);
       setError("Error cargando los tickets");
       setTickets([]);
+      toast.error("Error cargando tus tickets");
     } finally {
       setLoading(false);
     }

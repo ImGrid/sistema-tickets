@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import toast from "react-hot-toast";
 import { attachmentsService } from "../../services/api";
 import {
   Upload,
@@ -77,8 +78,10 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
 
     // Validar cantidad total
     if (selectedFiles.length + fileList.length > maxFiles) {
-      fileErrors.push(`Máximo ${maxFiles} archivos permitidos`);
+      const errorMsg = `Máximo ${maxFiles} archivos permitidos`;
+      fileErrors.push(errorMsg);
       setErrors(fileErrors);
+      toast.error(errorMsg);
       return;
     }
 
@@ -98,8 +101,23 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
       }
     });
 
-    setSelectedFiles((prev) => [...prev, ...validFiles]);
-    setErrors(fileErrors);
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+      toast.success(
+        `${validFiles.length} archivo${
+          validFiles.length > 1 ? "s" : ""
+        } seleccionado${validFiles.length > 1 ? "s" : ""}`
+      );
+    }
+
+    if (fileErrors.length > 0) {
+      setErrors(fileErrors);
+      toast.error(
+        `${fileErrors.length} archivo${
+          fileErrors.length > 1 ? "s" : ""
+        } no válido${fileErrors.length > 1 ? "s" : ""}`
+      );
+    }
   };
 
   // Manejar drag events
@@ -145,6 +163,7 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
       }
       return newFiles;
     });
+    toast.success("Archivo removido");
   };
 
   // Subir archivos
@@ -157,6 +176,13 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
 
       // Preparar archivos para upload
       const filesToUpload = selectedFiles.map((f) => f.file);
+
+      // Mostrar toast de inicio
+      const uploadingToast = toast.loading(
+        `Subiendo ${filesToUpload.length} archivo${
+          filesToUpload.length > 1 ? "s" : ""
+        }...`
+      );
 
       // Simular progress (el backend no devuelve progress real)
       const progressInterval = setInterval(() => {
@@ -190,6 +216,12 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
       });
 
       // Notificar éxito
+      toast.dismiss(uploadingToast);
+      toast.success(
+        `¡${filesToUpload.length} archivo${
+          filesToUpload.length > 1 ? "s subidos" : " subido"
+        } exitosamente!`
+      );
       onFilesUploaded(response.attachments);
 
       // Limpiar estado
@@ -203,7 +235,10 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
     } catch (error) {
       console.error("Error subiendo archivos:", error);
 
-      setErrors([error.response?.data?.error || "Error al subir los archivos"]);
+      const errorMessage =
+        error.response?.data?.error || "Error al subir los archivos";
+      setErrors([errorMessage]);
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -217,6 +252,7 @@ const FileUpload = ({ ticketId, onFilesUploaded }) => {
     setSelectedFiles([]);
     setUploadProgress({});
     setErrors([]);
+    toast.success("Archivos limpiados");
   };
 
   return (

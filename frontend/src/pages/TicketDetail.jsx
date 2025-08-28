@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
 import CommentsSection from "../components/ticket/CommentsSection";
@@ -55,6 +56,8 @@ const TicketDetail = () => {
       } else {
         setError("Error cargando el ticket");
       }
+
+      toast.error("Error cargando el ticket");
     } finally {
       setLoading(false);
     }
@@ -79,10 +82,10 @@ const TicketDetail = () => {
       );
       setTicket(response.ticket);
 
-      console.log(`Ticket ${ticket._id} actualizado a estado: ${newStatus}`);
+      toast.success(`Ticket actualizado a estado: ${newStatus}`);
     } catch (error) {
       console.error("Error actualizando estado:", error);
-      alert("Error al actualizar el estado del ticket");
+      toast.error("Error al actualizar el estado del ticket");
     } finally {
       setUpdating(false);
     }
@@ -98,10 +101,10 @@ const TicketDetail = () => {
       const response = await ticketsService.assignTicket(ticket._id, user._id);
       setTicket(response.ticket);
 
-      console.log(`Ticket ${ticket._id} asignado a ${user.name}`);
+      toast.success(`Ticket asignado exitosamente a ${user.name}`);
     } catch (error) {
       console.error("Error tomando ticket:", error);
-      alert("Error al tomar el ticket");
+      toast.error("Error al tomar el ticket");
     } finally {
       setUpdating(false);
     }

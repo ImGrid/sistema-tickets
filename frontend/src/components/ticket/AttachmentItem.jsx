@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { attachmentsService } from "../../services/api";
 import {
   Download,
@@ -69,6 +70,11 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
       setLoading(true);
       setError("");
 
+      // Mostrar toast de inicio de descarga
+      const downloadingToast = toast.loading(
+        `Descargando ${attachment.originalName}...`
+      );
+
       // Llamar al servicio de descarga
       const response = await attachmentsService.downloadFile(attachment._id);
 
@@ -83,9 +89,18 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
       // Limpiar
       link.remove();
       window.URL.revokeObjectURL(url);
+
+      // Mostrar éxito
+      toast.dismiss(downloadingToast);
+      toast.success(
+        `Archivo "${attachment.originalName}" descargado exitosamente`
+      );
     } catch (error) {
       console.error("Error descargando archivo:", error);
-      setError("Error al descargar el archivo");
+      const errorMessage =
+        error.response?.data?.error || "Error al descargar el archivo";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,9 +108,11 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
 
   // Manejar eliminación de archivo
   const handleDelete = async () => {
+    const fileName = attachment.originalName;
+
     if (
       !confirm(
-        `¿Estás seguro de que quieres eliminar "${attachment.originalName}"?`
+        `¿Estás seguro de que quieres eliminar "${fileName}"? Esta acción no se puede deshacer.`
       )
     ) {
       return;
@@ -105,11 +122,22 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
       setLoading(true);
       setError("");
 
+      // Mostrar toast de progreso
+      const deletingToast = toast.loading(`Eliminando ${fileName}...`);
+
       await attachmentsService.deleteFile(attachment._id);
+
+      // Mostrar éxito
+      toast.dismiss(deletingToast);
+      toast.success(`Archivo "${fileName}" eliminado exitosamente`);
+
       onFileDeleted(attachment._id);
     } catch (error) {
       console.error("Error eliminando archivo:", error);
-      setError("Error al eliminar el archivo");
+      const errorMessage =
+        error.response?.data?.error || "Error al eliminar el archivo";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,6 +150,14 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
     return `${
       import.meta.env.VITE_API_URL || "http://localhost:5000"
     }/uploads/${attachment.fileName}`.replace("/api", "");
+  };
+
+  // Manejar vista previa de imagen
+  const handleImagePreview = () => {
+    if (isImage()) {
+      setShowImagePreview(true);
+      toast.info("Haz clic fuera de la imagen para cerrar la vista previa");
+    }
   };
 
   return (
@@ -169,8 +205,9 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
               {/* Preview para imágenes */}
               {isImage() && (
                 <button
-                  onClick={() => setShowImagePreview(true)}
-                  className="p-1 text-gray-400 hover:text-blue-600"
+                  onClick={handleImagePreview}
+                  disabled={loading}
+                  className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-50"
                   title="Ver imagen"
                 >
                   <Eye className="w-4 h-4" />
@@ -221,8 +258,14 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
             <img
               src={getImagePreviewUrl()}
               alt={attachment.originalName}
-              onLoad={() => setImageLoading(false)}
-              onError={() => setImageLoading(false)}
+              onLoad={() => {
+                setImageLoading(false);
+                toast.success("Imagen cargada");
+              }}
+              onError={() => {
+                setImageLoading(false);
+                toast.error("Error cargando la imagen");
+              }}
               className={`max-w-full h-auto max-h-64 rounded-lg border border-gray-200 ${
                 imageLoading ? "opacity-50" : "opacity-100"
               }`}
@@ -256,10 +299,18 @@ const AttachmentItem = ({ attachment, currentUser, onFileDeleted }) => {
               alt={attachment.originalName}
               className="max-w-full max-h-full rounded-lg"
               onClick={(e) => e.stopPropagation()}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false);
+                toast.error("Error cargando la imagen en pantalla completa");
+              }}
             />
 
             <button
-              onClick={() => setShowImagePreview(false)}
+              onClick={() => {
+                setShowImagePreview(false);
+                toast.success("Vista previa cerrada");
+              }}
               className="absolute p-2 text-white bg-black bg-opacity-50 rounded-full top-2 right-2 hover:bg-opacity-70"
             >
               <X className="w-5 h-5" />

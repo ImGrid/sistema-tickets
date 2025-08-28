@@ -5,20 +5,42 @@ const logger = require("../utils/logger");
 const getTickets = async (req, res) => {
   try {
     const user = req.user;
-    const { status, category, priority, page = 1, limit = 20 } = req.query;
+    const {
+      status,
+      category,
+      priority,
+      page = 1,
+      limit = 20,
+      assignedTo,
+    } = req.query;
 
     // Construir filtros base
     let filters = {};
 
-    // Filtros por rol
-    if (user.role === "employee") {
-      // Empleados solo ven sus tickets
-      filters.createdBy = user._id;
-    } else if (user.role === "agent") {
-      // Agentes ven tickets asignados a ellos + sin asignar
-      filters.$or = [{ assignedTo: user._id }, { assignedTo: null }];
+    // NUEVA LÓGICA: Respetar parámetro assignedTo específico
+    if (assignedTo !== undefined) {
+      // Si se especifica assignedTo, usarlo directamente
+      if (assignedTo === "null" || assignedTo === null) {
+        // Tickets sin asignar
+        filters.assignedTo = null;
+      } else if (assignedTo === "me") {
+        // Mis tickets asignados
+        filters.assignedTo = user._id;
+      } else if (assignedTo) {
+        // Usuario específico
+        filters.assignedTo = assignedTo;
+      }
+    } else {
+      // Si NO se especifica assignedTo, aplicar lógica por rol (comportamiento anterior)
+      if (user.role === "employee") {
+        // Empleados solo ven sus tickets
+        filters.createdBy = user._id;
+      } else if (user.role === "agent") {
+        // Agentes ven tickets asignados a ellos + sin asignar (solo cuando no se especifica assignedTo)
+        filters.$or = [{ assignedTo: user._id }, { assignedTo: null }];
+      }
+      // Admin y supervisor ven todos (sin filtros adicionales)
     }
-    // Admin y supervisor ven todos (sin filtros adicionales)
 
     // Filtros opcionales
     if (status) filters.status = status;
@@ -44,6 +66,7 @@ const getTickets = async (req, res) => {
       role: user.role,
       total,
       filters,
+      assignedToParam: assignedTo, // Log para debugging
     });
 
     res.json({
