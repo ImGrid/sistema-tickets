@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
 import TicketFilters from "../components/ticket/TicketFilters";
@@ -17,15 +18,12 @@ import {
 
 const MyTickets = () => {
   const { user } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
 
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [totalTickets, setTotalTickets] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Estado de filtros
   const [filters, setFilters] = useState({
@@ -38,20 +36,6 @@ const MyTickets = () => {
   });
 
   const ITEMS_PER_PAGE = 10;
-
-  // Mostrar mensaje de éxito si viene de crear ticket
-  useEffect(() => {
-    if (location.state?.message) {
-      setSuccessMessage(location.state.message);
-      // Limpiar el estado para que no se muestre en refresh
-      navigate(location.pathname, { replace: true });
-
-      // Limpiar mensaje después de 5 segundos
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 5000);
-    }
-  }, [location.state, navigate, location.pathname]);
 
   // Cargar tickets cuando cambien filtros o página
   useEffect(() => {
@@ -218,18 +202,6 @@ const MyTickets = () => {
           </Link>
         </div>
       </div>
-
-      {/* Mensaje de éxito */}
-      {successMessage && (
-        <div className="p-4 border-l-4 border-green-400 bg-green-50">
-          <div className="flex">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <div className="ml-3">
-              <p className="text-sm text-green-700">{successMessage}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

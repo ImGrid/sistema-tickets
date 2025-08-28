@@ -6,7 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { Toaster } from "react-hot-toast";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import MainLayout from "./components/layout/MainLayout";
 
@@ -34,121 +34,120 @@ import Audit from "./pages/Audit";
 function App() {
   return (
     <AuthProvider>
-      <NotificationsProvider>
-        <Router>
-          <div className="App">
-            <Routes>
-              {/* Rutas públicas */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+      <Router>
+        <Toaster position="top-right" reverseOrder={false} />
+        <div className="App">
+          <Routes>
+            {/* Rutas públicas */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-              {/* Rutas protegidas con layout */}
+            {/* Rutas protegidas con layout */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* Dashboard principal */}
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+
+              {/* Rutas para empleados */}
               <Route
-                path="/"
+                path="my-tickets"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout />
+                  <ProtectedRoute allowedRoles={["employee"]}>
+                    <MyTickets />
                   </ProtectedRoute>
                 }
-              >
-                {/* Dashboard principal */}
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
+              />
+              <Route
+                path="create-ticket"
+                element={
+                  <ProtectedRoute allowedRoles={["employee"]}>
+                    <CreateTicket />
+                  </ProtectedRoute>
+                }
+              />
 
-                {/* Rutas para empleados */}
-                <Route
-                  path="my-tickets"
-                  element={
-                    <ProtectedRoute allowedRoles={["employee"]}>
-                      <MyTickets />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="create-ticket"
-                  element={
-                    <ProtectedRoute allowedRoles={["employee"]}>
-                      <CreateTicket />
-                    </ProtectedRoute>
-                  }
-                />
+              {/* Rutas para agentes */}
+              <Route
+                path="my-assigned-tickets"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={["agent", "supervisor", "admin"]}
+                  >
+                    <MyAssignedTickets />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="all-tickets"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={["agent", "supervisor", "admin"]}
+                  >
+                    <AllTickets />
+                  </ProtectedRoute>
+                }
+              />
 
-                {/* Rutas para agentes */}
-                <Route
-                  path="my-assigned-tickets"
-                  element={
-                    <ProtectedRoute
-                      allowedRoles={["agent", "supervisor", "admin"]}
-                    >
-                      <MyAssignedTickets />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="all-tickets"
-                  element={
-                    <ProtectedRoute
-                      allowedRoles={["agent", "supervisor", "admin"]}
-                    >
-                      <AllTickets />
-                    </ProtectedRoute>
-                  }
-                />
+              {/* Rutas para admin/supervisor */}
+              <Route
+                path="manage-tickets"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "supervisor"]}>
+                    <ManageTickets />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "supervisor"]}>
+                    <Users />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="audit"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <Audit />
+                  </ProtectedRoute>
+                }
+              />
 
-                {/* Rutas para admin/supervisor */}
-                <Route
-                  path="manage-tickets"
-                  element={
-                    <ProtectedRoute allowedRoles={["admin", "supervisor"]}>
-                      <ManageTickets />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="users"
-                  element={
-                    <ProtectedRoute allowedRoles={["admin", "supervisor"]}>
-                      <Users />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="audit"
-                  element={
-                    <ProtectedRoute allowedRoles={["admin"]}>
-                      <Audit />
-                    </ProtectedRoute>
-                  }
-                />
+              {/* Rutas de tickets - Detalle y edición */}
+              <Route path="tickets/:id" element={<TicketDetail />} />
+              <Route
+                path="tickets/:id/edit"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={[
+                      "employee",
+                      "agent",
+                      "supervisor",
+                      "admin",
+                    ]}
+                  >
+                    <EditTicket />
+                  </ProtectedRoute>
+                }
+              />
 
-                {/* Rutas de tickets - Detalle y edición */}
-                <Route path="tickets/:id" element={<TicketDetail />} />
-                <Route
-                  path="tickets/:id/edit"
-                  element={
-                    <ProtectedRoute
-                      allowedRoles={[
-                        "employee",
-                        "agent",
-                        "supervisor",
-                        "admin",
-                      ]}
-                    >
-                      <EditTicket />
-                    </ProtectedRoute>
-                  }
-                />
+              {/* Perfil disponible para todos */}
+              <Route path="profile" element={<Profile />} />
+            </Route>
 
-                {/* Perfil disponible para todos */}
-                <Route path="profile" element={<Profile />} />
-              </Route>
-
-              {/* Ruta 404 */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </div>
-        </Router>
-      </NotificationsProvider>
+            {/* Ruta 404 */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </div>
+      </Router>
     </AuthProvider>
   );
 }

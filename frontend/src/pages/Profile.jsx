@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
-import { useNotifications } from "../contexts/NotificationsContext";
 import ChangePassword from "../components/user/ChangePassword";
 import {
   User,
@@ -15,7 +15,6 @@ import {
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
-  const { showSuccess, showError } = useNotifications();
   const [isEditing, setIsEditing] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -41,17 +40,17 @@ const Profile = () => {
   const handleSave = async () => {
     // Validaciones básicas
     if (!formData.name.trim()) {
-      showError("El nombre es obligatorio");
+      toast.error("El nombre es obligatorio");
       return;
     }
 
     if (!formData.email.trim()) {
-      showError("El email es obligatorio");
+      toast.error("El email es obligatorio");
       return;
     }
 
     if (!formData.department) {
-      showError("El departamento es obligatorio");
+      toast.error("El departamento es obligatorio");
       return;
     }
 
@@ -75,10 +74,10 @@ const Profile = () => {
 
       updateUser(updatedUser);
       setIsEditing(false);
-      showSuccess("Perfil actualizado exitosamente");
+      toast.success("Perfil actualizado exitosamente");
     } catch (error) {
       console.error("Error actualizando perfil:", error);
-      showError("Error al actualizar el perfil");
+      toast.error("Error al actualizar el perfil");
     } finally {
       setIsUpdating(false);
     }

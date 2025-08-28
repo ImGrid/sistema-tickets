@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNotifications } from "../contexts/NotificationsContext";
+import toast from "react-hot-toast";
 import { auditService } from "../services/api";
 import {
   Shield,
@@ -19,14 +19,11 @@ import {
 } from "lucide-react";
 
 const Audit = () => {
-  const { showSuccess, showError } = useNotifications();
-
   // Estados principales
   const [securityStats, setSecurityStats] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,7 +63,7 @@ const Audit = () => {
       setSecurityStats(response.stats);
     } catch (error) {
       console.error("Error cargando security stats:", error);
-      setError("Error cargando estadísticas de seguridad");
+      toast.error("Error cargando estadísticas de seguridad");
     }
   };
 
@@ -74,7 +71,6 @@ const Audit = () => {
   const loadAuditLogs = async () => {
     try {
       setLogsLoading(true);
-      setError("");
 
       const params = {
         ...filters,
@@ -92,7 +88,7 @@ const Audit = () => {
       setTotalLogs(response.pagination?.total || response.logs?.length || 0);
     } catch (error) {
       console.error("Error cargando audit logs:", error);
-      setError("Error cargando logs de auditoría");
+      toast.error("Error cargando logs de auditoría");
       setAuditLogs([]);
     } finally {
       setLogsLoading(false);
@@ -104,7 +100,7 @@ const Audit = () => {
   const refreshData = async () => {
     setLoading(true);
     await Promise.all([loadSecurityStats(), loadAuditLogs()]);
-    showSuccess("Datos de auditoría actualizados");
+    toast.success("Datos de auditoría actualizados");
   };
 
   // Manejar cambio de filtros
@@ -138,10 +134,10 @@ const Audit = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      showSuccess("Logs exportados exitosamente");
+      toast.success("Logs exportados exitosamente");
     } catch (error) {
       console.error("Error exportando logs:", error);
-      showError("Error al exportar los logs");
+      toast.error("Error al exportar los logs");
     } finally {
       setExporting(false);
     }
@@ -207,13 +203,6 @@ const Audit = () => {
           </button>
         </div>
       </div>
-
-      {/* Error state */}
-      {error && (
-        <div className="p-4 border-l-4 border-red-400 bg-red-50">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
 
       {/* Estadísticas de seguridad */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

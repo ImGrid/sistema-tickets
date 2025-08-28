@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 
 const Register = () => {
@@ -10,7 +11,6 @@ const Register = () => {
     department: "",
     employeeId: "",
   });
-  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, isAuthenticated } = useAuth();
@@ -30,15 +30,12 @@ const Register = () => {
       ...prev,
       [name]: value,
     }));
-    // Limpiar error cuando el usuario empieza a escribir
-    if (error) setError("");
   };
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError("");
 
     // Validaciones básicas frontend
     if (
@@ -47,13 +44,13 @@ const Register = () => {
       !formData.password ||
       !formData.department
     ) {
-      setError("Todos los campos marcados son obligatorios");
+      toast.error("Todos los campos marcados son obligatorios");
       setIsSubmitting(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+      toast.error("La contraseña debe tener al menos 6 caracteres");
       setIsSubmitting(false);
       return;
     }
@@ -62,12 +59,13 @@ const Register = () => {
       const result = await register(formData);
 
       if (result.success) {
-        navigate("/dashboard", { replace: true });
+        toast.success("¡Registro exitoso! Por favor, inicia sesión.");
+        navigate("/login", { replace: true });
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
     } catch (error) {
-      setError("Error inesperado. Intenta de nuevo.");
+      toast.error("Error inesperado. Intenta de nuevo.");
       console.error("Error en registro:", error);
     } finally {
       setIsSubmitting(false);
@@ -87,12 +85,6 @@ const Register = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="px-4 py-3 text-red-700 border border-red-200 rounded bg-red-50">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <div>
               <label
@@ -167,7 +159,7 @@ const Register = () => {
                 required
                 value={formData.department}
                 onChange={handleChange}
-                className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Selecciona tu departamento</option>
                 <option value="IT">IT</option>
@@ -194,7 +186,7 @@ const Register = () => {
                 type="text"
                 value={formData.employeeId}
                 onChange={handleChange}
-                className="block w-full px-3 py-2 mt-1 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full px-3 py-2 mt-1 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="EMP-001"
               />
             </div>

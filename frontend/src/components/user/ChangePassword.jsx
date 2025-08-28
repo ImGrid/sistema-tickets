@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { useNotifications } from "../../contexts/NotificationsContext";
+import toast from "react-hot-toast";
 import { authService } from "../../services/api";
 import { Lock, Eye, EyeOff, Save, X } from "lucide-react";
 
 const ChangePassword = ({ onCancel }) => {
-  const { showSuccess, showError } = useNotifications();
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -79,7 +78,7 @@ const ChangePassword = ({ onCancel }) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      showError("Por favor corrige los errores en el formulario");
+      toast.error("Por favor corrige los errores en el formulario");
       return;
     }
 
@@ -92,7 +91,7 @@ const ChangePassword = ({ onCancel }) => {
         newPassword: formData.newPassword,
       });
 
-      showSuccess("Contraseña actualizada exitosamente");
+      toast.success("Contraseña actualizada exitosamente");
 
       // Limpiar formulario
       setFormData({
@@ -111,10 +110,10 @@ const ChangePassword = ({ onCancel }) => {
         if (error.response.data.error.includes("incorrecta")) {
           setErrors({ currentPassword: "Contraseña actual incorrecta" });
         } else {
-          showError(error.response.data.error);
+          toast.error(error.response.data.error);
         }
       } else {
-        showError("Error al cambiar la contraseña. Intenta de nuevo.");
+        toast.error("Error al cambiar la contraseña. Intenta de nuevo.");
       }
     } finally {
       setIsSubmitting(false);

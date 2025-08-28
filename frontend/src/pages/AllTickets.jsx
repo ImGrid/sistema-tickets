@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
+import toast from "react-hot-toast";
 import TicketFilters from "../components/ticket/TicketFilters";
 import {
   FileText,
@@ -82,7 +83,7 @@ const AllTickets = () => {
       );
     } catch (error) {
       console.error("Error cargando tickets:", error);
-      setError("Error cargando los tickets");
+      toast.error("Error cargando los tickets");
       setTickets([]);
     } finally {
       setLoading(false);
@@ -107,7 +108,7 @@ const AllTickets = () => {
       console.log(`Ticket ${ticketId} asignado a ${user.name}`);
     } catch (error) {
       console.error("Error tomando ticket:", error);
-      alert("Error al tomar el ticket");
+      toast.error("Error al tomar el ticket");
     } finally {
       setUpdating(null);
     }
@@ -130,7 +131,7 @@ const AllTickets = () => {
       console.log(`Ticket ${ticketId} actualizado a estado: ${newStatus}`);
     } catch (error) {
       console.error("Error actualizando estado:", error);
-      alert("Error al actualizar el estado");
+      toast.error("Error al actualizar el estado");
     } finally {
       setUpdating(null);
     }
@@ -375,19 +376,6 @@ const AllTickets = () => {
             )}
           </div>
         </div>
-
-        {/* Error state */}
-        {error && (
-          <div className="p-4 border-l-4 border-red-400 bg-red-50">
-            <p className="text-red-700">{error}</p>
-            <button
-              onClick={loadTickets}
-              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-            >
-              Intentar de nuevo
-            </button>
-          </div>
-        )}
 
         {/* Loading state */}
         {loading && (

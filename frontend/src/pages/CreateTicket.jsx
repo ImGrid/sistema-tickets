@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
 import { Plus, AlertCircle, Save, X } from "lucide-react";
@@ -18,7 +19,6 @@ const CreateTicket = () => {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
 
   // Opciones de categorías
   const categories = [
@@ -53,9 +53,6 @@ const CreateTicket = () => {
         return newErrors;
       });
     }
-
-    // Limpiar error general
-    if (submitError) setSubmitError("");
   };
 
   // Validar formulario
@@ -71,12 +68,11 @@ const CreateTicket = () => {
 
     // Validar antes de enviar
     if (!validateForm()) {
-      setSubmitError("Por favor corrige los errores antes de continuar");
+      toast.error("Por favor corrige los errores antes de continuar");
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitError("");
 
     try {
       // Preparar datos para envío
@@ -92,23 +88,19 @@ const CreateTicket = () => {
       };
 
       // Crear ticket
-      const response = await ticketsService.createTicket(ticketData);
+      await ticketsService.createTicket(ticketData);
 
-      console.log("Ticket creado exitosamente:", response);
+      toast.success("Ticket creado exitosamente");
 
       // Redirigir a la lista de tickets
-      navigate("/my-tickets", {
-        state: {
-          message: "Ticket creado exitosamente",
-          ticketId: response.ticket._id,
-        },
-      });
+      navigate("/my-tickets");
+
     } catch (error) {
       console.error("Error creando ticket:", error);
 
       // Manejar errores específicos del backend
       if (error.response?.data?.error) {
-        setSubmitError(error.response.data.error);
+        toast.error(error.response.data.error);
       } else if (error.response?.data?.details) {
         // Errores de validación del backend
         const backendErrors = {};
@@ -116,9 +108,9 @@ const CreateTicket = () => {
           backendErrors[detail.field] = detail.message;
         });
         setErrors(backendErrors);
-        setSubmitError("Por favor corrige los errores marcados");
+        toast.error("Por favor corrige los errores marcados");
       } else {
-        setSubmitError("Error al crear el ticket. Intenta de nuevo.");
+        toast.error("Error al crear el ticket. Intenta de nuevo.");
       }
     } finally {
       setIsSubmitting(false);
@@ -143,18 +135,6 @@ const CreateTicket = () => {
       {/* Formulario */}
       <div className="bg-white rounded-lg shadow">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Error general */}
-          {submitError && (
-            <div className="p-4 border-l-4 border-red-400 bg-red-50">
-              <div className="flex">
-                <AlertCircle className="w-5 h-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{submitError}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Título */}
           <div>
             <label

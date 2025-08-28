@@ -19,25 +19,24 @@ const MainLayout = () => {
       {/* Header */}
       <Header onToggleSidebar={toggleSidebar} />
 
-      <div className="flex">
-        {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
-        {/* Overlay para mobile */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
-            onClick={closeSidebar}
-          />
-        )}
+      {/* Overlay para mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
+          onClick={closeSidebar}
+          style={{ top: "64px" }}
+        />
+      )}
 
-        {/* Contenido principal */}
-        <main className="flex-1 lg:ml-64">
-          <div className="p-4 lg:p-6">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      {/* Contenido principal */}
+      <main className="lg:ml-64">
+        <div className="p-4 lg:p-6">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 };

@@ -10,6 +10,22 @@
 
   body {
     @apply text-gray-900 bg-gray-50;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Evitar scroll horizontal */
+  }
+
+  /* Reset de box-sizing para evitar problemas de espaciado */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* Asegurar que el contenedor principal no tenga espacios extra */
+  #root {
+    min-height: 100vh;
+    width: 100%;
   }
 }
 
@@ -34,4 +50,82 @@
   .loading-spinner {
     @apply border-b-2 border-blue-600 rounded-full animate-spin;
   }
+}
+
+/* Utilities adicionales para fix de layout */
+@layer utilities {
+  /* Reglas específicas para el layout */
+  .main-layout {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Asegurar que el sidebar no cause overflow horizontal */
+  .sidebar-fixed {
+    width: 16rem; /* 256px = w-64 en Tailwind */
+    position: fixed;
+    left: 0;
+    top: 4rem; /* 64px = h-16 del header */
+    height: calc(100vh - 4rem);
+    z-index: 30;
+    background: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  /* En mobile, ocultar sidebar por defecto */
+  @media (max-width: 1023px) {
+    .sidebar-fixed {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-fixed.open {
+      transform: translateX(0);
+    }
+  }
+
+  /* En desktop, siempre mostrar sidebar */
+  @media (min-width: 1024px) {
+    .sidebar-fixed {
+      transform: translateX(0);
+    }
+  }
+
+  /* Main content con margen correcto */
+  .main-content {
+    width: 100%;
+    min-height: calc(100vh - 4rem);
+  }
+
+  @media (min-width: 1024px) {
+    .main-content {
+      margin-left: 16rem; /* 256px = w-64 */
+    }
+  }
+
+  /* Header fijo */
+  .header-fixed {
+    position: sticky;
+    top: 0;
+    height: 4rem; /* 64px */
+    z-index: 40;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Prevenir espacios extra en containers */
+  .no-extra-space {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Scroll suave para navegación */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
+  
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { dashboardService } from "../services/api";
 import EmployeeDashboard from "../components/dashboard/EmployeeDashboard";
@@ -9,14 +10,12 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   // Cargar datos del dashboard según el rol
   useEffect(() => {
     const loadDashboard = async () => {
       try {
         setLoading(true);
-        setError("");
 
         let response;
 
@@ -40,7 +39,7 @@ const Dashboard = () => {
         setDashboardData(response.dashboard);
       } catch (error) {
         console.error("Error cargando dashboard:", error);
-        setError("Error cargando los datos del dashboard");
+        toast.error("Error cargando los datos del dashboard");
 
         // En caso de error, intentar cargar datos básicos
         try {
@@ -65,9 +64,9 @@ const Dashboard = () => {
     try {
       const response = await dashboardService.getDashboard();
       setDashboardData(response.dashboard);
-      setError("");
+      toast.success("Dashboard actualizado");
     } catch (error) {
-      setError("Error recargando datos");
+      toast.error("Error recargando datos");
     } finally {
       setLoading(false);
     }
@@ -86,12 +85,12 @@ const Dashboard = () => {
   }
 
   // Error state
-  if (error && !dashboardData) {
+  if (!dashboardData) {
     return (
       <div className="py-12 text-center">
         <div className="mb-4 text-red-600">
           <h3 className="text-lg font-medium">Error</h3>
-          <p>{error}</p>
+          <p>No se pudieron cargar los datos del dashboard.</p>
         </div>
         <button
           onClick={refreshDashboard}
@@ -111,7 +110,6 @@ const Dashboard = () => {
           <EmployeeDashboard
             data={dashboardData}
             loading={loading}
-            error={error}
             onRefresh={refreshDashboard}
           />
         );
@@ -120,7 +118,6 @@ const Dashboard = () => {
           <AgentDashboard
             data={dashboardData}
             loading={loading}
-            error={error}
             onRefresh={refreshDashboard}
           />
         );
@@ -130,7 +127,6 @@ const Dashboard = () => {
           <AdminDashboard
             data={dashboardData}
             loading={loading}
-            error={error}
             onRefresh={refreshDashboard}
           />
         );
@@ -156,12 +152,6 @@ const Dashboard = () => {
             Bienvenido, {user?.name} ({user?.role})
           </p>
         </div>
-
-        {error && (
-          <div className="px-3 py-1 text-sm text-red-600 rounded bg-red-50">
-            {error}
-          </div>
-        )}
 
         <button
           onClick={refreshDashboard}

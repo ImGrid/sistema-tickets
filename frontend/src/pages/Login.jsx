@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
@@ -7,7 +8,6 @@ const Login = () => {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login, isAuthenticated } = useAuth();
@@ -29,19 +29,16 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
-    // Limpiar error cuando el usuario empieza a escribir
-    if (error) setError("");
   };
 
   // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError("");
 
     // Validaciones básicas frontend
     if (!formData.email || !formData.password) {
-      setError("Email y contraseña son obligatorios");
+      toast.error("Email y contraseña son obligatorios");
       setIsSubmitting(false);
       return;
     }
@@ -50,14 +47,15 @@ const Login = () => {
       const result = await login(formData);
 
       if (result.success) {
+        toast.success(`Bienvenido de nuevo, ${result.user.name}`)
         // Redirigir según el origen o al dashboard
         const from = location.state?.from?.pathname || "/dashboard";
         navigate(from, { replace: true });
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
     } catch (error) {
-      setError("Error inesperado. Intenta de nuevo.");
+      toast.error("Error inesperado. Intenta de nuevo.");
       console.error("Error en login:", error);
     } finally {
       setIsSubmitting(false);
@@ -77,12 +75,6 @@ const Login = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="px-4 py-3 text-red-700 border border-red-200 rounded bg-red-50">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <div>
               <label

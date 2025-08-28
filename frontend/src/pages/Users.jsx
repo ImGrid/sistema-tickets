@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
-import { useNotifications } from "../contexts/NotificationsContext";
 import { usersService } from "../services/api";
 import UserDeleteModal from "../components/common/UserDeleteModal";
 import {
@@ -25,14 +25,12 @@ import {
 
 const Users = () => {
   const { user } = useAuth();
-  const { showSuccess, showError, showWarning } = useNotifications();
 
   // Estados principales
   const [users, setUsers] = useState([]);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // Estados de filtros
   const [filters, setFilters] = useState({
@@ -108,7 +106,6 @@ const Users = () => {
   const loadUsers = async () => {
     try {
       setUsersLoading(true);
-      setError("");
 
       const params = {
         ...filters,
@@ -142,7 +139,7 @@ const Users = () => {
       setTotalUsers(adjustedTotal);
     } catch (error) {
       console.error("Error cargando usuarios:", error);
-      setError("Error cargando la lista de usuarios");
+      toast.error("Error cargando la lista de usuarios");
       setUsers([]);
     } finally {
       setUsersLoading(false);
@@ -155,7 +152,7 @@ const Users = () => {
     setLoading(true);
     setSelectedUsers([]);
     await Promise.all([loadUserStats(), loadUsers()]);
-    showSuccess("Datos de usuarios actualizados");
+    toast.success("Datos de usuarios actualizados");
   };
 
   // Manejar cambio de filtros
@@ -226,12 +223,12 @@ const Users = () => {
 
       await usersService.updateUser(editingUser._id, userFormData);
 
-      showSuccess(`Usuario ${userFormData.name} actualizado exitosamente`);
+      toast.success(`Usuario ${userFormData.name} actualizado exitosamente`);
       closeModal();
       loadUsers();
     } catch (error) {
       console.error("Error actualizando usuario:", error);
-      showError(
+      toast.error(
         error.response?.data?.error || "Error al actualizar el usuario"
       );
     } finally {
@@ -243,12 +240,12 @@ const Users = () => {
   const handleQuickRoleChange = async (targetUser, newRole) => {
     try {
       await usersService.updateUserRole(targetUser._id, newRole);
-      showSuccess(`Rol de ${targetUser.name} cambiado a ${newRole}`);
+      toast.success(`Rol de ${targetUser.name} cambiado a ${newRole}`);
       setOpenDropdown(null);
       loadUsers();
     } catch (error) {
       console.error("Error cambiando rol:", error);
-      showError(error.response?.data?.error || "Error al cambiar el rol");
+      toast.error(error.response?.data?.error || "Error al cambiar el rol");
     }
   };
 
@@ -256,14 +253,14 @@ const Users = () => {
   const handleQuickStatusChange = async (targetUser, isActive) => {
     try {
       await usersService.updateUserStatus(targetUser._id, isActive);
-      showSuccess(
+      toast.success(
         `Usuario ${targetUser.name} ${isActive ? "activado" : "desactivado"}`
       );
       setOpenDropdown(null);
       loadUsers();
     } catch (error) {
       console.error("Error cambiando estado:", error);
-      showError(error.response?.data?.error || "Error al cambiar el estado");
+      toast.error(error.response?.data?.error || "Error al cambiar el estado");
     }
   };
 
@@ -282,7 +279,7 @@ const Users = () => {
       setUpdating(true);
       await usersService.deleteUser(userToDelete._id, isPermanent);
 
-      showSuccess(
+      toast.success(
         `Usuario ${userToDelete.name} ${
           isPermanent ? "eliminado permanentemente" : "desactivado"
         }`
@@ -293,7 +290,7 @@ const Users = () => {
       loadUsers();
     } catch (error) {
       console.error("Error eliminando usuario:", error);
-      showError(
+      toast.error(
         error.response?.data?.error ||
           `Error al ${isPermanent ? "eliminar" : "desactivar"} el usuario`
       );
@@ -310,7 +307,7 @@ const Users = () => {
     );
 
     if (filteredSelectedUsers.length === 0) {
-      showError("Selecciona al menos un usuario válido");
+      toast.error("Selecciona al menos un usuario válido");
       return;
     }
 
@@ -335,16 +332,16 @@ const Users = () => {
       const failed = results.filter((r) => r.status === "rejected").length;
 
       if (successful > 0) {
-        showSuccess(`${successful} usuarios actualizados correctamente`);
+        toast.success(`${successful} usuarios actualizados correctamente`);
       }
       if (failed > 0) {
-        showWarning(`${failed} usuarios no se pudieron actualizar`);
+        toast.warning(`${failed} usuarios no se pudieron actualizar`);
       }
 
       setSelectedUsers([]);
       loadUsers();
     } catch (error) {
-      showError("Error en operación masiva");
+      toast.error("Error en operación masiva");
     } finally {
       setUpdating(false);
     }
@@ -411,13 +408,6 @@ const Users = () => {
           </button>
         </div>
       </div>
-
-      {/* Error state */}
-      {error && (
-        <div className="p-4 border-l-4 border-red-400 bg-red-50">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

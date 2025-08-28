@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useNotifications } from "../contexts/NotificationsContext";
+import toast from "react-hot-toast";
 import { ticketsService, dashboardService } from "../services/api";
 import {
   Settings,
@@ -10,19 +9,13 @@ import {
   Shield,
   AlertTriangle,
   Clock,
-  CheckCircle,
   Eye,
-  UserCheck,
   RefreshCw,
-  Filter,
   Search,
-  MoreVertical,
 } from "lucide-react";
 
 const ManageTickets = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { showSuccess, showError } = useNotifications();
 
   // Estados principales
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -104,7 +97,7 @@ const ManageTickets = () => {
   const refreshData = async () => {
     setSelectedTickets([]);
     await Promise.all([loadDashboardData(), loadAllTickets()]);
-    showSuccess("Datos actualizados");
+    toast.success("Datos actualizados");
   };
 
   // Manejar selección de tickets
@@ -128,7 +121,7 @@ const ManageTickets = () => {
   // Operaciones masivas
   const handleBulkOperation = async (operation, value) => {
     if (selectedTickets.length === 0) {
-      showError("Selecciona al menos un ticket");
+      toast.error("Selecciona al menos un ticket");
       return;
     }
 
@@ -156,17 +149,17 @@ const ManageTickets = () => {
 
       // Mostrar resultados
       if (successCount > 0) {
-        showSuccess(`${successCount} tickets actualizados correctamente`);
+        toast.success(`${successCount} tickets actualizados correctamente`);
       }
       if (errorCount > 0) {
-        showError(`${errorCount} tickets no se pudieron actualizar`);
+        toast.error(`${errorCount} tickets no se pudieron actualizar`);
       }
 
       // Recargar datos y limpiar selección
       await loadAllTickets();
       setSelectedTickets([]);
     } catch (error) {
-      showError("Error en operación masiva");
+      toast.error("Error en operación masiva");
     } finally {
       setBulkOperation({ type: "", value: "", loading: false });
       setUpdating(false);

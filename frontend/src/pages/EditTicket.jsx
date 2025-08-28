@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ticketsService } from "../services/api";
+import toast from "react-hot-toast";
 import { ArrowLeft, Save, X, AlertCircle } from "lucide-react";
 
 const EditTicket = () => {
