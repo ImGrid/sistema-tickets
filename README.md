@@ -2,6 +2,10 @@
 
 Sistema web para la administración, seguimiento y resolución de incidencias o solicitudes de soporte en organizaciones, desarrollado con Node.js (Express) para el backend y React para el frontend.
 
+### Video de demostración del sistema
+
+Puedes ver una demostración en video del sistema en el siguiente enlace: [Video de demostración]([https://drive.google.com/file/d/1s40N6tDFzAuuoJNkAvwHJbCQgZldWX0w/view?usp=sharing](https://drive.google.com/file/d/1s40N6tDFzAuuoJNkAvwHJbCQgZldWX0w/view?usp=sharing))
+
 ## Características principales
 
 - Autenticación y autorización basada en roles (admin, supervisor, agent, employee)
